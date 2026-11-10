@@ -1,0 +1,41 @@
+name: Build AstorClient
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. 拉取代码
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # 2. 设置 JDK 环境（AstorClient 为 Minecraft 1.8.9 客户端，JDK 8 或 11 均可，此处使用 11）
+      - name: Set up JDK 11
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '11'
+
+      # 3. 赋予 gradlew 执行权限（Linux 环境必需）
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      # 4. 执行 Gradle 构建
+      - name: Build with Gradle
+        run: ./gradlew build --no-daemon
+
+      # 5. 上传构建产物（build/libs 下的所有 .jar 文件）
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: AstorClient-Build
+          path: build/libs/*.jar
+          if-no-files-found: error
+          retention-days: 7
